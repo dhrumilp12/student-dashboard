@@ -1,14 +1,56 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Student {
+  id         String             @id @default(uuid())
+  name       String
+  cohort     String
+  dateJoined DateTime           @default(now())
+  lastLogin  DateTime           @default(now())
+  status     StudentStatus      @default(ACTIVE)
+  courses    CourseEnrollment[]
+
+  @@map("students")
+}
+
+model Course {
+  id       String             @id @default(uuid())
+  name     String
+  type     CourseType
+  icon     String
+  students CourseEnrollment[]
+
+  @@map("courses")
+}
+
+model CourseEnrollment {
+  studentId  String
+  courseId   String
+  enrolledAt DateTime @default(now())
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, courseId])
+  @@map("student_courses")
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+
+  @@map("student_status")
+}
+
+enum CourseType {
+  SCIENCE
+  MATH
+
+  @@map("course_type")
 }
